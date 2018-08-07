@@ -8,7 +8,7 @@ import java.util.HashMap;
 class Term implements Comparable {
 
 	public int degree;
-	public int coeff;
+	public double coeff;
 	public char varaible;
 	@Override
 	public int compareTo(Object term) {
@@ -40,12 +40,23 @@ class Term implements Comparable {
 		newTerm.varaible=this.varaible;
 		return newTerm;
 	}
+	
+	public Term divideBy(Term y){
+		Term t = new Term(this.degree - y.degree, this.coeff / y.coeff, '\0');
+		return t;
+	}
 
-	public Term(int degree, int coeff, char var) {
+	public Term multiply(Term y){
+		Term t = new Term(this.degree + y.degree, this.coeff * y.coeff, '\0');
+		return t;
+	}
+
+	public Term(int degree, double coeff, char var) {
 		this.degree=degree;
 		this.coeff=coeff;
 		this.varaible=var;
 	}
+	
 	public Term() {
 
 	}
@@ -68,10 +79,10 @@ class Term implements Comparable {
 				term.coeff=-1;
 				return term;
 			}
-			term.coeff=Integer.parseInt(tokens[0].substring(0, tokens[0].length()-1));
+			term.coeff=Double.parseDouble(tokens[0].substring(0, tokens[0].length()-1));
 		}
 		else
-			term.coeff=Integer.parseInt(tokens[0].substring(0, tokens[0].length()));
+			term.coeff=Double.parseDouble(tokens[0].substring(0, tokens[0].length()));
 		return term;
 	}
 
@@ -100,6 +111,10 @@ public class Polynomial {
 	public Polynomial(ArrayList<Term>list) {
 		this.poly=list;
 	}
+	
+	public Polynomial(Term t){
+		this.poly.add(t);
+	}
 
 	@Override
 	public String toString() {
@@ -125,9 +140,9 @@ public class Polynomial {
 
 	public Polynomial sum(Polynomial p) {
 
-		HashMap<Integer, Integer>map=new HashMap<>();
+		HashMap<Integer, Double>map=new HashMap<>();
 		ArrayList<Term>termList=new ArrayList<>();
-		int newCoeff;
+		double newCoeff;
 		for(Term t:this.poly)
 			map.put(t.degree, t.coeff);
 		String poly="",temp="";
@@ -146,9 +161,9 @@ public class Polynomial {
 
 	public Polynomial subtract(Polynomial p) {
 
-		HashMap<Integer, Integer>map=new HashMap<>();
+		HashMap<Integer, Double>map=new HashMap<>();
 		ArrayList<Term>termList=new ArrayList<>();
-		int newCoeff;
+		double newCoeff;
 		for(Term t:this.poly)
 			map.put(t.degree, t.coeff);
 		String poly="",temp="";
@@ -166,10 +181,11 @@ public class Polynomial {
 	}
 
 	public Polynomial multiply(Polynomial p) {
-		HashMap<Integer,Integer>degreeMap=new HashMap<>();
-		HashMap<Integer, Integer>finalMap=new HashMap<>();
+		HashMap<Integer,Double>degreeMap=new HashMap<>();
+		HashMap<Integer, Double>finalMap=new HashMap<>();
 		ArrayList<Term>list=new ArrayList<>();
-		int newCoeff,newDegree;
+		double newCoeff;
+		int newDegree;
 		for(Term t:this.poly)
 		degreeMap.put(t.degree, t.coeff);
 		for(Term t:p.poly) {
@@ -185,6 +201,37 @@ public class Polynomial {
 		for(int degree:finalMap.keySet())
 			list.add(new Term(degree,finalMap.get(degree),'x'));
 		return new Polynomial(list);
+	}
+	
+	
+	public Term getLeadingTerm(){
+		return this.poly.get(0);
+	}
+
+	public boolean isZeroPolynomial(){
+		Term leadingTerm = this.poly.get(0);
+		if(leadingTerm.coeff == 0 && leadingTerm.degree == 0) return true;
+		else return false;
+	}
+
+	public int getDegree(){
+		Term leadingTerm = this.poly.get(0);
+		return leadingTerm.degree;
+	}
+
+
+	public Polynomial divideBy(Polynomial d){
+
+		Polynomial q = new Polynomial("0");
+		Polynomial r = new Polynomial(this.toString());
+		while(!r.isZeroPolynomial() && r.getDegree() >= d.getDegree()){
+			Term t = (r.getLeadingTerm()).divideBy(d.getLeadingTerm());
+			Polynomial tp = new Polynomial(t);
+			q = q.sum(tp);
+			r = r.subtract(tp.multiply(d));
+		}
+
+		return q;
 	}
 
 }
