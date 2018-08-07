@@ -81,9 +81,6 @@ public class Polynomial {
 
 	public ArrayList<Term>poly;
 
-	/**/
-
-
 	private static ArrayList<Term> generateList(String inpPol) {
 		String[]list=inpPol.split("\\+");
 		ArrayList<Term>termList=new ArrayList<>();
@@ -100,6 +97,11 @@ public class Polynomial {
 		Collections.sort(poly);
 	}
 
+	public Polynomial(ArrayList<Term>list) {
+		this.poly=list;
+	}
+
+	@Override
 	public String toString() {
 		String str="";
 		for(Term t:poly)
@@ -118,7 +120,6 @@ public class Polynomial {
 				newPoly+="+";
 			newPoly+=poly.charAt(i);
 		}
-		//System.out.println(""+newPoly);
 		return newPoly;
 	}
 
@@ -169,12 +170,10 @@ public class Polynomial {
 		HashMap<Integer, Integer>finalMap=new HashMap<>();
 		ArrayList<Term>list=new ArrayList<>();
 		int newCoeff,newDegree;
-		for(Term t:this.poly) { //System.out.println(t+" is added to map");
+		for(Term t:this.poly)
 		degreeMap.put(t.degree, t.coeff);
-		}
 		for(Term t:p.poly) {
 			for(int degree:degreeMap.keySet()) {
-				//System.out.println(t+" is multiplied | with "+degreeMap.get(degree)+"x^"+degree);
 				newCoeff=t.coeff*degreeMap.get(degree);
 				newDegree=t.degree+degree;
 				if(finalMap.containsKey(newDegree))
@@ -186,23 +185,6 @@ public class Polynomial {
 		for(int degree:finalMap.keySet())
 			list.add(new Term(degree,finalMap.get(degree),'x'));
 		return new Polynomial(list);
-	}
-
-	public Polynomial(ArrayList<Term>list) {
-		this.poly=list;
-	}
-
-	public static void main(String ar[]) {
-
-		//Polynomial poly=new Polynomial("3x^5 - 4x^2 - 14x^4");
-		//Polynomial poly=new Polynomial("0");
-		//Polynomial poly1=new Polynomial("-7x^5 - 14x^6 + 6x^4 + 100");
-
-		Polynomial p1=new Polynomial("-x");
-		Polynomial p2=new Polynomial("x");
-
-		System.out.println(p1.multiply(p2));
-
 	}
 
 }
