@@ -6,57 +6,51 @@ import java.util.Collections;
 import java.util.HashMap;
 
 class Term implements Comparable {
-	
+
 	public int degree;
 	public int coeff;
 	public char varaible;
-	
-	public int getDegree() {
-		return degree;
-	}
-
-	public void setDegree(int degree) {
-		this.degree = degree;
-	}
-
-	public int getCoeff() {
-		return coeff;
-	}
-
-	public void setCoeff(int coeff) {
-		this.coeff = coeff;
-	}
-
-	public char getVaraible() {
-		return varaible;
-	}
-
-	public void setVaraible(char varaible) {
-		this.varaible = varaible;
-	}
-	
 	@Override
 	public int compareTo(Object term) {
 		// TODO Auto-generated method stub
 		return this.degree-((Term)term).degree;
 	}
-	
+
 	@Override
 	public String toString() {
 		//String str=
+		if(coeff==0)
+			return "0";
+		if(degree==1) {
+			if(coeff>0)
+				return "+"+coeff+"x";
+			return coeff+"x";
+		}
 		if(coeff>0)
 			return "+"+coeff+"x"+"^"+degree;
 		return coeff+"x"+"^"+degree;
 	}
-}
 
-public class Polynomial {
-	
-	public ArrayList<Term>poly;
-	
-	/**/
-	
-	private static Term generateTerm(String str) {
+	public Term add(Term t) {
+		if(t.degree!=this.degree)
+			return null;
+		Term newTerm=new Term();
+		newTerm.coeff=this.coeff+t.coeff;
+		newTerm.degree=this.degree;
+		newTerm.varaible=this.varaible;
+		return newTerm;
+	}
+
+	public Term(int degree, int coeff, char var) {
+		this.degree=degree;
+		this.coeff=coeff;
+		this.varaible=var;
+	}
+	public Term() {
+
+	}
+
+	public static Term generateTerm(String str) {
 		//System.out.println(str);
 		Term term=new Term();
 		term.coeff=1;
@@ -65,36 +59,54 @@ public class Polynomial {
 		String[]tokens=str.split("\\^");
 		if(tokens.length>1)
 			term.degree=Integer.parseInt(tokens[1]);
-		if(tokens[0].charAt(tokens[0].length()-1)!='x')
-			term.coeff=Integer.parseInt(tokens[0]);
-		else
+		if(tokens[0].charAt(tokens[0].length()-1)=='x') {
+			if(term.degree==0)
+				term.degree=1;
+			if(tokens[0].length()==1)
+				return term;
+			else if(tokens[0].length()==2 && tokens[0].charAt(0)=='-') {
+				term.coeff=-1;
+				return term;
+			}
 			term.coeff=Integer.parseInt(tokens[0].substring(0, tokens[0].length()-1));
+		}
+		else
+			term.coeff=Integer.parseInt(tokens[0].substring(0, tokens[0].length()));
 		return term;
 	}
-	
+
+}
+
+public class Polynomial {
+
+	public ArrayList<Term>poly;
+
+	/**/
+
+
 	private static ArrayList<Term> generateList(String inpPol) {
 		String[]list=inpPol.split("\\+");
 		ArrayList<Term>termList=new ArrayList<>();
 		for(String str:list) {
 			if(!str.equals(""))
-				termList.add(generateTerm(str));
+				termList.add(Term.generateTerm(str));
 		}
 		return termList;
 	}
-	
+
 	public Polynomial(String inpPol) {
 		inpPol=preProcess(inpPol);
 		poly=generateList(inpPol);
 		Collections.sort(poly);
 	}
-	
+
 	public String toString() {
 		String str="";
 		for(Term t:poly)
 			str+=t.toString();
 		return str;
 	}
-	
+
 	private static String preProcess(String poly) {
 		String newPoly="";
 		if(poly.charAt(0)!='-' || poly.charAt(0)!='+')
@@ -109,90 +121,88 @@ public class Polynomial {
 		//System.out.println(""+newPoly);
 		return newPoly;
 	}
-	
+
 	public Polynomial sum(Polynomial p) {
+
 		HashMap<Integer, Integer>map=new HashMap<>();
-		
+		ArrayList<Term>termList=new ArrayList<>();
+		int newCoeff;
 		for(Term t:this.poly)
 			map.put(t.degree, t.coeff);
 		String poly="",temp="";
 		for(Term t:p.poly) {
+			newCoeff=t.coeff;
 			if(map.containsKey(t.degree)) {
-				if(t.degree==0)
-					temp="+"+(map.get(t.degree)+t.coeff)+"";
-				else
-					temp="+"+(map.get(t.degree)+t.coeff)+"x^"+t.degree;
+				newCoeff+=map.get(t.degree);
 				map.remove(t.degree);
 			}
-			else {
-					if(t.degree==0)
-						temp="+"+t.coeff;
-					else
-						temp="+"+t.toString();
-				}
-			poly+=temp;
+			termList.add(new Term(t.degree,newCoeff,'x'));
 		}
-		for(int degree:map.keySet()) {
-			if(degree>0)
-				poly+="+"+map.get(degree)+"x^"+degree;
-			else
-				poly+="+"+map.get(degree);
-		}
-		System.out.println(poly);
-		return new Polynomial(poly);
+		for(int degree:map.keySet())
+			termList.add(new Term(degree,map.get(degree),'x'));
+		return new Polynomial(termList);
 	}
-	
+
 	public Polynomial subtract(Polynomial p) {
+
 		HashMap<Integer, Integer>map=new HashMap<>();
-		
+		ArrayList<Term>termList=new ArrayList<>();
+		int newCoeff;
 		for(Term t:this.poly)
 			map.put(t.degree, t.coeff);
 		String poly="",temp="";
 		for(Term t:p.poly) {
+			newCoeff=-t.coeff;
 			if(map.containsKey(t.degree)) {
-				if(t.degree==0)
-					temp="+"+(map.get(t.degree)-t.coeff)+"";
-				else
-					temp="+"+(map.get(t.degree)-t.coeff)+"x^"+t.degree;
+				newCoeff+=map.get(t.degree);
 				map.remove(t.degree);
 			}
-			else {
-				if(t.degree==0) {
-					if(t.coeff<0)
-						temp=""+Math.abs(t.coeff);
-					else
-						temp="-"+t.coeff;
-				}
-				else {
-					if(t.coeff<0) {
-						t.coeff=Math.abs(t.coeff);
-						temp=t.toString();
-					}
-					else
-						temp="-"+t.toString();
-				}
-			}
-			poly+=temp;
+			termList.add(new Term(t.degree,newCoeff,'x'));
 		}
-		for(int degree:map.keySet()) {
-			if(degree>0)
-				poly+="+"+map.get(degree)+"x^"+degree;
-			else
-				poly+="+"+map.get(degree);
-		}
-		System.out.println(poly);
-		return new Polynomial(poly);
+		for(int degree:map.keySet())
+			termList.add(new Term(degree,map.get(degree),'x'));
+		return new Polynomial(termList);
 	}
-	
+
+	public Polynomial multiply(Polynomial p) {
+		HashMap<Integer,Integer>degreeMap=new HashMap<>();
+		HashMap<Integer, Integer>finalMap=new HashMap<>();
+		ArrayList<Term>list=new ArrayList<>();
+		int newCoeff,newDegree;
+		for(Term t:this.poly) { //System.out.println(t+" is added to map");
+		degreeMap.put(t.degree, t.coeff);
+		}
+		for(Term t:p.poly) {
+			for(int degree:degreeMap.keySet()) {
+				//System.out.println(t+" is multiplied | with "+degreeMap.get(degree)+"x^"+degree);
+				newCoeff=t.coeff*degreeMap.get(degree);
+				newDegree=t.degree+degree;
+				if(finalMap.containsKey(newDegree))
+					finalMap.put(newDegree, newCoeff+finalMap.get(newDegree));
+				else
+					finalMap.put(newDegree, newCoeff);
+			}
+		}
+		for(int degree:finalMap.keySet())
+			list.add(new Term(degree,finalMap.get(degree),'x'));
+		return new Polynomial(list);
+	}
+
+	public Polynomial(ArrayList<Term>list) {
+		this.poly=list;
+	}
+
 	public static void main(String ar[]) {
 
-		Polynomial poly=new Polynomial("3x^5 - 4x^2 + 4x^4");
-		Polynomial poly1=new Polynomial("7x^5 - 14x^6 + 6x^4 + 100");
-		
-		
-		
-		System.out.println(poly.subtract(poly1));
-		
+		//Polynomial poly=new Polynomial("3x^5 - 4x^2 - 14x^4");
+		//Polynomial poly=new Polynomial("0");
+		//Polynomial poly1=new Polynomial("-7x^5 - 14x^6 + 6x^4 + 100");
+
+		Polynomial p1=new Polynomial("-x");
+		Polynomial p2=new Polynomial("x");
+
+		System.out.println(p1.multiply(p2));
+
 	}
 
 }
